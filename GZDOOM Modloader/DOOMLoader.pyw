@@ -90,14 +90,12 @@ def doomLoad ():
     profile=prof_input.get()+'\\'
     mod1=DOOM_mod.get(ANCHOR)
     os.system(doom+mod1+save+profile+mod1)
-    print(doom+mod1+save+profile+mod1)
     sys.exit()
 
 def doom2Load ():
     profile=prof_input.get()+'\\'
     mod2=DOOM2_mod.get(ANCHOR)
-    #os.system(doom2+mod2+save+profile+mod2)
-    print(doom2+mod2+save+profile+mod2)
+    os.system(doom2+mod2+save+profile+mod2)
     sys.exit()
 
 create_table()
