@@ -4,9 +4,34 @@ import sqlite3
 import os
 import sys
 
+
 menu=Tk()
 menu.title('DOOM Loader')
 menu.iconbitmap('doom.ico')
+
+#DOOM Parameters
+os.chdir('Source\\')
+modDir=os.listdir('..\\Mods\\')
+mapdir1=os.listdir('..\\Maps\\DOOM\\')
+mapdir2=os.listdir('..\\Maps\\DOOM2\\')
+doom='gzdoom -iwad \"iwad\\doom.wad\" -file \"..\\Mods\\'
+doom2='gzdoom -iwad \"iwad\\doom2.wad\" -file \"..\\Mods\\'
+mapd1='\\*.*\" \"..\\Maps\\DOOM\\'
+mapd2='\\*.*\" \"..\\Maps\\DOOM2\\'
+save=' -savedir "save\\'
+
+iwaddir=os.listdir('iwad\\')
+iwadvar=StringVar()
+iwadvar.set(iwaddir[0])
+
+def startup():
+    create_table()
+    popmapliststartup()
+    prof_input['values']=prof_value_input()
+    count=0
+    for mod in modDir:
+        modlist.insert(count, mod)
+        count+=1
 
 #DATABASE
 def create_table():
@@ -62,58 +87,69 @@ def prof_del_btn():
             conn.commit()
         conn.close
 
-#DOOM Parameters
-os.chdir('Source\\')
-DOOM_mod=Listbox(menu, width=30)
-DOOM2_mod=Listbox(menu, width=30)
-doom='gzdoom -iwad \"iwad\\doom.wad\" -file \"..\\Doom1Mod\\'
-doom2='gzdoom -iwad \"iwad\\doom2.wad\" -file \"..\\Doom2Mod\\'
-save='\\*.*" -savedir "save\\'
+def popmapliststartup():
+    iwadvar.set(iwaddir[0])
+    maplist.delete(0, END)
+    count=0
+    for imap in mapdir1:
+        maplist.insert(count, imap)
+        count+=1
 
-#loading wads
-modDir1=os.listdir('..\\Doom1Mod\\')
-count1=1
-for mod in modDir1:
-    DOOM_mod.insert(count1, mod)
-    count1+=1
+def popmaplist(event):
+    if 'DOOM.' in iwadvar.get():
+        print('doom')
+        maplist.delete(0, END)
+        count=0
+        for imap in mapdir1:
+            maplist.insert(count, imap)
+            count+=1
+    if 'DOOM2.' in iwadvar.get():
+        print('doom2')
+        maplist.delete(0, END)
+        count=0
+        for imap in mapdir2:
+            maplist.insert(count, imap)
+            count+=1
 
-
-modDir2=os.listdir('..\\Doom2Mod\\')
-count2=1
-for mod in modDir2:
-    DOOM2_mod.insert(count2, mod)
-    count2+=1
-
-
-#functions to run doom
-def doomLoad ():
+def loadGame():
     profile=prof_input.get()+'\\'
-    mod1=DOOM_mod.get(ANCHOR)
-    os.system(doom+mod1+save+profile+mod1)
-    sys.exit()
+    mod=modlist.get(ANCHOR)
+    imap='\\'+maplist.get(ANCHOR)+'\"'
+    if 'DOOM.' in iwadvar.get():
+        os.system(doom+mod+mapd1+imap+save+profile+mod+imap)
+        
+    if 'DOOM2.' in iwadvar.get():
+        os.system(doom2+mod+mapd2+imap+save+profile+mod+imap)
+        
 
-def doom2Load ():
-    profile=prof_input.get()+'\\'
-    mod2=DOOM2_mod.get(ANCHOR)
-    os.system(doom2+mod2+save+profile+mod2)
-    sys.exit()
+#Labels
+iwadlab=Label(menu, text='IWAD:')
+proflab=Label(menu, text='Profile:')
+modlab=Label(menu, text='Mod List:')
+maplab=Label(menu, text='Map List:')
 
-create_table()
-
-DOOM_button=Button(menu, text='Load DOOM', width=10, command=doomLoad)
-DOOM2_button=Button(menu, text='Load DOOM2', width=10, command=doom2Load)
+maplist=Listbox(menu, width=30)
+modlist=Listbox(menu, width=30)
+game_button=Button(menu, text='Load DOOM', width=10, command=loadGame)
 prof_add_btn = Button(menu, text='Add', width=10, command=prof_add_btn)
-prof_input = ttk.Combobox(menu, width=40)
+prof_input = ttk.Combobox(menu, width=20)
 prof_del_btn = Button(menu, text='Delete', width=10, command=prof_del_btn)
+iwad_option = OptionMenu(menu, iwadvar, *iwaddir, command=popmaplist)
 
-prof_input.grid(column=0, row=0, columnspan=2)
-prof_add_btn.grid(column=0, row=1)
-prof_del_btn.grid(column=1, row=1)
-DOOM_mod.grid(column=0, row=2)
-DOOM2_mod.grid(column=1, row=2)
-DOOM_button.grid(column=0, row=3)
-DOOM2_button.grid(column=1, row=3)
+iwadlab.grid(row=0, column=0)
+iwad_option.grid(row=0, column=1)
+proflab.grid(row=1, column=0)
+prof_input.grid(row=1, column=1)
+prof_add_btn.grid(row=2, column=0)
+prof_del_btn.grid(row=2, column=1)
+modlab.grid(row=3, column=0)
+maplab.grid(row=3, column=1)
+modlist.grid(row=4, column=0)
+maplist.grid(row=4, column=1)
+game_button.grid(row=5, column=0)
 
-prof_input['values']=prof_value_input()
+startup()
+#loads database and inputs profiles into drop down
+
 
 menu.mainloop()
