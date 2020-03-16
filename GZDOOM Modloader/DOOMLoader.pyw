@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
 import sqlite3
 import os
 import sys
@@ -52,7 +53,7 @@ def prof_value_input():
         return prof
     conn.close()
 
-def prof_add_btn():
+def prof_add():
     name=prof_input.get()
     with sqlite3.connect('Doom.db') as conn:
         c=conn.cursor()
@@ -66,26 +67,32 @@ def prof_add_btn():
             options.append(name)
             prof_input['values']=options
             print('Profile {} has been added'.format(name))
-        conn.commit
-    conn.close
+        conn.commit()
+    conn.close()
 
 def prof_del_btn():
     sqlite3.connect('Doom.db')
     name = prof_input.get()
-    if name:
-        with sqlite3.connect('Doom.db') as conn:
-            c = conn.cursor()
-            c.execute('DELETE FROM profile WHERE prof = ?', (name,))
-            if c.rowcount > 0:
-                print('Profile {} has been deleted'.format(name))
-                options = list(prof_input['values'])
-                options.remove(name)
-                prof_input['values'] = options
-            else:
-                print('Profile Doesn\'t Exist')
-            prof_input.set('')
-            conn.commit()
-        conn.close
+    destroy = messagebox.askyesno('Remove Profile', 'Are you sure you would like to remove {}?\nThis will remove all of the profiles save data.'.format(name))
+    if destroy == True:
+        if name:
+            with sqlite3.connect('Doom.db') as conn:
+                c = conn.cursor()
+                c.execute('DELETE FROM profile WHERE prof = ?', (name,))
+                if c.rowcount > 0:
+                    os.system('rmdir /s /q \"save\\{}\"'.format(name))
+                    print('Profile {} has been deleted'.format(name))
+                    options = list(prof_input['values'])
+                    options.remove(name)
+                    prof_input['values'] = options
+
+                else:
+                    print('Profile Doesn\'t Exist')
+                prof_input.set('')
+                conn.commit()
+            conn.close()
+    if destroy == False:
+        return
 
 def popmapliststartup():
     iwadvar.set(iwaddir[0])
@@ -97,14 +104,12 @@ def popmapliststartup():
 
 def popmaplist(event):
     if 'DOOM.' in iwadvar.get():
-        print('doom')
         maplist.delete(0, END)
         count=0
         for imap in mapdir1:
             maplist.insert(count, imap)
             count+=1
     if 'DOOM2.' in iwadvar.get():
-        print('doom2')
         maplist.delete(0, END)
         count=0
         for imap in mapdir2:
@@ -112,14 +117,17 @@ def popmaplist(event):
             count+=1
 
 def loadGame():
+    prof_add()
     profile=prof_input.get()+'\\'
     mod=modlist.get(ANCHOR)
     imap='\\'+maplist.get(ANCHOR)+'\"'
     if 'DOOM.' in iwadvar.get():
         os.system(doom+mod+mapd1+imap+save+profile+mod+imap)
+        sys.exit()
         
     if 'DOOM2.' in iwadvar.get():
         os.system(doom2+mod+mapd2+imap+save+profile+mod+imap)
+        sys.exit()
         
 
 #Labels
@@ -128,10 +136,10 @@ proflab=Label(menu, text='Profile:')
 modlab=Label(menu, text='Mod List:')
 maplab=Label(menu, text='Map List:')
 
-maplist=Listbox(menu, width=30)
-modlist=Listbox(menu, width=30)
+maplist=Listbox(menu, width=30, exportselection=False)
+modlist=Listbox(menu, width=30, exportselection=False)
 game_button=Button(menu, text='Load DOOM', width=10, command=loadGame)
-prof_add_btn = Button(menu, text='Add', width=10, command=prof_add_btn)
+prof_add_btn = Button(menu, text='Add', width=10, command=prof_add)
 prof_input = ttk.Combobox(menu, width=20)
 prof_del_btn = Button(menu, text='Delete', width=10, command=prof_del_btn)
 iwad_option = OptionMenu(menu, iwadvar, *iwaddir, command=popmaplist)
@@ -149,7 +157,5 @@ maplist.grid(row=4, column=1)
 game_button.grid(row=5, column=0)
 
 startup()
-#loads database and inputs profiles into drop down
-
 
 menu.mainloop()
